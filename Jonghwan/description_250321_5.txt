@@ -1,0 +1,59 @@
+Sound Insulation GUI - Updated Version
+
+This update improves the layout, material selection, and input system for better usability and functionality.
+
+Material Selection Panel Added
+
+Users can select Material 1, Material 2, and Material 3 (Foam or Aluminum) from dropdown menus.
+
+Selection dynamically updates the input panel.
+
+Dynamic Material Property Input
+
+Foam: 5 left-aligned + 4 right-aligned inputs.
+
+Aluminum: 3 left-aligned + 2 right-aligned inputs.
+
+Unselected materials keep the panel hidden.
+
+Scrollable Input Panel
+
+QScrollArea allows easy navigation through material properties.
+
+Right-Aligned Labels
+
+Labels are now right-aligned for readability.
+
+Calculate Button Functionality
+
+Clicking the button prints "Calculating...", ready for future calculations.
+
+사운드 차폐 GUI - 업데이트된 버전
+
+이 업데이트는 레이아웃, 재료 선택 및 입력 시스템을 개선하여 사용성을 향상시킵니다.
+
+재료 선택 패널 추가
+
+사용자는 Material 1, Material 2, Material 3을 선택 가능 (Foam 또는 Aluminum).
+
+선택에 따라 입력 패널이 동적으로 업데이트됨.
+
+동적 재료 물성 입력
+
+Foam: 왼쪽 5개, 오른쪽 4개 입력 필드.
+
+Aluminum: 왼쪽 3개, 오른쪽 2개 입력 필드.
+
+선택되지 않은 재료는 패널이 숨겨짐.
+
+스크롤 가능한 입력 패널
+
+QScrollArea를 사용하여 입력 필드를 쉽게 탐색 가능.
+
+우측 정렬 라벨
+
+가독성을 위해 라벨이 우측 정렬됨.
+
+계산 버튼 기능
+
+클릭 시 "Calculating..." 메시지가 출력됨 (추후 계산 기능 추가 가능).
