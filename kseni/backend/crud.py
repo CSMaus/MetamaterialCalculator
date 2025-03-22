@@ -4,7 +4,6 @@ import pandas as pd
 from database import get_connection
 
 def insert_material(name, density, elasticity, conductivity):
-    """Inserts a new material into the database"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""

@@ -16,7 +16,7 @@ class DynamicButtonsApp(QWidget):
         control_layout.addWidget(self.add_button)
         main_layout.addWidget(self.control_panel)
 
-        # Buttons Container with Scroll Area - add them into right
+        # Buttons Container with Scroll Area - add them into rightz
         self.scroll_area = QScrollArea(self)
         self.scroll_widget = QWidget()
         self.buttons_layout = QVBoxLayout(self.scroll_widget)
