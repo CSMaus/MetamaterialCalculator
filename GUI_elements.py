@@ -16,12 +16,10 @@ class CustomButton:
         self.image_path = image_path
         self.button = QPushButton("")  # No text, image only
 
-        # Load image and set full button size
         icon = QIcon(QPixmap(image_path))
         self.button.setIcon(icon)
         self.button.setIconSize(QSize(80, 80))  # Ensures icon fills the button
 
-        # Remove padding, margin, and background for a clean look
         self.button.setStyleSheet("""
             QPushButton {
                 border: none;

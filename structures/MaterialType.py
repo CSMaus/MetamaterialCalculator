@@ -4,7 +4,7 @@
 class PorousMaterial:
     def __init__(self, update_callback: callable = None):
         super().__init__()
-
+        # TODO: check all this parameters correctness
         self._properties = {
             "viscous_cl": None,  # Viscous Characteristic Length [m]
             "thermal_cl": None,  # Thermal Characteristic Length [m]
@@ -38,6 +38,7 @@ class SolidMaterial:
             "density": None,
             "loss_factor": None,
             "poissons_ratio": None
+
         }
 
         self.update_callback = update_callback
