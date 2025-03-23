@@ -11,5 +11,5 @@ Send, Modify, Request, etc. using PostdegreeSQL
 Link to original paper: https://www.sciencedirect.com/science/article/pii/S0022460X23003474
 There is also original matlab code.
 
-First example of the GUI (it wil be adjusted later): ![image_2025-03-18_16-52-40](https://github.com/user-attachments/assets/ecf8eeda-aa64-49a1-ab23-7fe5093ba13d)
+GUI prototype:![GUI_prototype.png](GUI_prototype0.png)
 
