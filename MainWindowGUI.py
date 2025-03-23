@@ -3,7 +3,7 @@ import sys
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QScrollArea, QLineEdit, \
     QComboBox
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QGridLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from torch.utils.data.datapipes.gen_pyi import materialize_lines
 
 from GUI_elements import CustomButton, CustomButton2
@@ -55,7 +55,6 @@ class MainWindow(QWidget):
     def update_material_panel(self, material):
         self.material_gui.set_material(material)
 
-# TODO: todo: fix the layers to be aligned to each other wihtout spacing
 class LayersStructureGUI(QWidget):
     global layers
     def __init__(self, main_window):
@@ -87,7 +86,10 @@ class LayersStructureGUI(QWidget):
         self.scroll_widget = QWidget()
         self.layers_layout = QHBoxLayout(self.scroll_widget)
         self.layers_layout.setSpacing(0)
-        self.layers_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        # self.layers_layout.setContentsMargins(0, 0, 0, 0)
+        # self.layers_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.scroll_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        # self.scroll_area.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         # self.layers_layout = QGridLayout(self.scroll_widget) #  QHBoxLayout QGridLayout
 
         self.scroll_widget.setLayout(self.layers_layout)
@@ -124,14 +126,6 @@ class LayersStructureGUI(QWidget):
 
 
     def update_layers_gui(self):
-        # TODO: sort keys by increasing index number
-
-        # for ease remake all gui for layers
-        # remove existing buttons before updating
-        '''for i in reversed(range(self.layers_layout.count())):
-            self.layers_layout.itemAt(i).widget().deleteLater()
-        self.layers_buttons.clear()'''
-
         while self.layers_layout.count():
             item = self.layers_layout.takeAt(0)
             if item.widget():
@@ -142,31 +136,34 @@ class LayersStructureGUI(QWidget):
         sorted_keys = sorted(layers.keys(), key=lambda x: int(x))
         for col_index, layer_key in enumerate(sorted_keys):
             thickness_val = layers[layer_key]["thickness"]
+            layer_container_width = float(thickness_val) + 22
+            # layer_container_width = layer_container_width if layer_container_width > 25 else layer_container_width + 25
 
             material_type = layers[layer_key]["material_type"]
             image_path = self.porous_image if material_type == "Porous" else self.solid_image
             new_layer_btn = CustomButton2(int(layer_key), image_path, self.layers_layout, self.change_selected_layer)
-
+            new_layer_btn.resize_btn(layer_container_width, new_layer_btn.button.sizeHint().height())
             layer_container = QVBoxLayout()
-            layer_container_width = new_layer_btn.button.sizeHint().width()
+            # layer_container_width = new_layer_btn.button.sizeHint().width()
 
             thickness_input = QLineEdit(str(thickness_val))
-            thickness_input.textChanged.connect(self.create_thickness_update_callback(layer_key, thickness_input))
-            thickness_unit_label = QLabel("mm")
-            thickness_unit_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            # textChanged
+            thickness_input.editingFinished.connect(self.create_thickness_update_callback(layer_key, thickness_input))
+            # thickness_unit_label = QLabel("mm")
+            # thickness_unit_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            # label_width = thickness_unit_label.sizeHint().width()
 
-            label_width = thickness_unit_label.sizeHint().width()
-
-            thickness_input.setFixedWidth(layer_container_width - label_width)
+            thickness_input.setFixedWidth(layer_container_width) # - label_width)
             thickness_input.setAlignment(Qt.AlignmentFlag.AlignLeft)
             thickness_input.setStyleSheet("padding: 0px; border: 1px solid gray;")
 
-            thickness_layout = QHBoxLayout()
-            thickness_layout.setSpacing(0)
-            thickness_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-            thickness_layout.addWidget(thickness_input)
-            thickness_layout.addWidget(thickness_unit_label)
-            layer_container.addLayout(thickness_layout)
+            # thickness_layout = QHBoxLayout()
+            # thickness_layout.setSpacing(0)
+            # thickness_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            # thickness_layout.addWidget(thickness_input)
+            # thickness_layout.addWidget(thickness_unit_label)
+            # layer_container.addLayout(thickness_layout)
+            layer_container.addWidget(thickness_input)
 
             layer_container.addWidget(new_layer_btn.button, alignment=Qt.AlignmentFlag.AlignLeft)
 
@@ -183,14 +180,39 @@ class LayersStructureGUI(QWidget):
                 self.clear_layout(item.layout())
 
     def create_thickness_update_callback(self, layer_key, thickness_input):
-        """Fixes lambda scope issue and properly updates thickness."""
         def callback():
             self.update_thickness(layer_key, thickness_input.text())
         return callback
 
     def update_thickness(self, layer_key, value):
         try:
+            # new_width = int(float(value))
+            # new_width = new_width if new_width > 15 else new_width + 15
+
             layers[layer_key]["thickness"] = float(value)
+            self.update_layers_gui()
+            # print(layers[layer_key]["thickness"])
+            '''for i in range(self.layers_layout.count()):
+                item = self.layers_layout.itemAt(i)
+                if isinstance(item, QVBoxLayout):
+                    thickness_input = item.itemAt(0).widget() # QLineEdit
+                    layer_button = item.itemAt(1).widget()  # CustomButton
+
+                    if thickness_input and layer_button:
+                        thickness_input.setFixedWidth(new_width)
+                        height = layer_button.sizeHint().height()
+                        layer_button.setFixedWidth(new_width)
+                        layer_button.setStyleSheet(f"""
+                        QPushButton {{
+                            border: none;
+                            padding: 0px;
+                            width: {new_width}px;
+                            height: {height}px;
+                        }}""")
+                        layer_button.setIconSize(QSize(new_width, height))  # Ensure image stretches'''
+
+            # modify the properties of each element of this layers_layout item to the new width:
+            # i e the width of the layers_layout_item.thickness_input and layers_layout_item.new_layer_btn.resize_btn(...)
         except ValueError:
             pass  # Ignore invalid inputs (e.g., empty field)
 
@@ -220,6 +242,8 @@ class MaterialPropertiesGUI(QWidget):
 
         self.textboxes = {}
         self.params_layout = QVBoxLayout()
+        self.params_layout.setSpacing(5)
+        self.params_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setup_ui()
         self.setLayout(self.params_layout)
 

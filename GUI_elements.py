@@ -1,7 +1,7 @@
 # here there will be classes for creating complex interactive elements
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtCore import QSize
+from PyQt6.QtCore import QSize, Qt
 
 
 class CustomButton:
@@ -62,8 +62,6 @@ class CustomButton2:
         self.image_path = image_path
         self.button = QPushButton("")
 
-
-
         self.button.setStyleSheet("""
             QPushButton {
                 border: none;
@@ -83,14 +81,29 @@ class CustomButton2:
         self.on_click_callback = on_click_callback
 
     def resize_btn(self, new_width, new_height):
-        self.button.resize(QSize(new_width, new_height))
+        # self.button.resize(QSize(new_width, new_height))
+        self.button.setFixedSize(new_width, new_height)
+        self.button.setStyleSheet(f"""
+            QPushButton {{
+                border: none;
+                padding: 0px;
+                width: {new_width}px;
+                height: {new_height}px;
+            }}
+        """)
         self.update_image(self.image_path)
 
     def update_image(self, new_image_path):
         self.image_path = new_image_path
         width = self.button.sizeHint().width()
         height = self.button.sizeHint().height()
-        pixmap = QPixmap(new_image_path).scaled(QSize(width, height))
+
+        # pixmap = QPixmap(new_image_path).scaled(QSize(width, height))
+        # pixmap = QPixmap(new_image_path).scaled(QSize(width, height), Qt.TransformationMode.SmoothTransformation)
+
+        pixmap = QPixmap(new_image_path)
+        pixmap = pixmap.scaled(width, height, Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation)
+
         icon = QIcon(pixmap)
         self.button.setIcon(icon)
         self.button.setIconSize(QSize(width, height))
@@ -100,7 +113,7 @@ class CustomButton2:
         # layer and material properties
         print(f"Button {self.index} clicked!")
         if self.on_click_callback:
-            self.on_click_callback(self)  # Call external callback if provided
+            self.on_click_callback(self)
 
     def remove(self, parent_layout):
         """Removes the button from the layout."""
