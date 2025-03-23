@@ -38,7 +38,6 @@ class SolidMaterial:
             "density": None,
             "loss_factor": None,
             "poissons_ratio": None
-
         }
 
         self.update_callback = update_callback

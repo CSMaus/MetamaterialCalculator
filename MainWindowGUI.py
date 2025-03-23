@@ -5,16 +5,19 @@ from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHB
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QGridLayout
 from PyQt6.QtCore import Qt, QSize
 from torch.utils.data.datapipes.gen_pyi import materialize_lines
-
 from GUI_elements import CustomButton, CustomButton2
 from structures.MaterialType import PorousMaterial, SolidMaterial
+from kseni.backend.crud import insert_material, get_materials, user_name
 
-# later need to implement read from database
-# at least one material in layers
-# later to replace it to dictionary with calculation results
-# layers would be dictionary to interactive any position change of layer
 layers = {}
 selected_layer = "0"
+
+# TODO: load from database:
+# new window where we will make a search of materials in DB by their names and produser names
+# also, need to implement search, so in list there would be only ones,
+# which combined name "{material_name} {producer_name}" contains search phrase in any part
+# todo: do not forget to match the material type
+# todo: also maybe we can make sort by material type before printing list of materials for search
 
 
 class MainWindow(QWidget):
@@ -22,22 +25,38 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        # self.porous_material = PorousMaterial()
-        # self.solid_material = SolidMaterial()
-        # self.material_gui = MaterialPropertiesGUI(self.porous_material)
-        # self.material_gui.set_material(self.solid_material)
         self.material_gui = MaterialPropertiesGUI(layers[selected_layer]["material_params"])
-
         self.layers_gui = LayersStructureGUI(self)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.material_gui)
 
+        self.add_material_lo = QHBoxLayout()
+        self.add_material_lo.setSpacing(5)
+
+        self.material_text = QLabel("Material name: ")
+        self.material_name = QLineEdit()
+        self.add_material_inDB = QPushButton("➕", self)
+        self.add_material_inDB.clicked.connect(self.add_material_toDB)
+        self.add_material_lo.addWidget(self.material_text)
+        self.add_material_lo.addWidget(self.material_name)
+        self.add_material_lo.addWidget(self.add_material_inDB)
+
+
+        self.see_db = QPushButton("Print DB", self)
+        self.see_db.clicked.connect(self.print_db)
+
         layout = QVBoxLayout()
         layout.addWidget(self.layers_gui)
         layout.addWidget(self.scroll_area)
+        # layout.addWidget(self.add_material_inDB)
+        layout.addLayout(self.add_material_lo)
+        layout.addWidget(self.see_db)
         self.setLayout(layout)
+
+
+
 
         # self.material = PorousMaterial(update_callback=update_material_ui)
         # here need to add only gui element with material parameters
@@ -51,6 +70,31 @@ class MainWindow(QWidget):
         # from layers global variable
         # and based on this layer material we have to update material
         # where material is layers[selected_layer_key]
+
+    def add_material_toDB(self):
+        property_dict = layers[selected_layer]["material_params"]._properties
+        material_dict = {}
+        for mkey in property_dict.keys():
+            try:
+                material_dict[mkey] = float(property_dict[mkey])
+            except Exception as ex:
+                print("All properties should be defined as numbers (float)")
+                print(ex)
+                material_dict[mkey] = 0
+
+        material_name = f"{self.material_name}"
+        material_type = "Porous" if "viscous_cl" in material_dict else "Solid"
+        user_added = user_name # "admin"  # Later, replace with actual logged-in user
+        producer = "Unknown Producer"  # Later, replace with user input
+
+        insert_material(material_name, material_type, user_added, producer, material_dict)
+
+        # some_interaction_with_db_script.add("material_name", material_dict)
+    def print_db(self):
+        df = get_materials()
+        for index, row in df.iterrows():
+            print(f"ID: {row['id']}, Name: {row['name']}, Properties: {row['properties']}")
+        # print(df)
 
     def update_material_panel(self, material):
         self.material_gui.set_material(material)
@@ -99,7 +143,7 @@ class LayersStructureGUI(QWidget):
         self.scroll_area.setWidgetResizable(True)
         main_layout.addWidget(self.scroll_area)
 
-        self.solid_image = "solid.png"
+        self.solid_image = "solid.jpg"
         self.porous_image = "porous.png"
         self.layers_buttons = []  # this is Buttons that looks like images
 
