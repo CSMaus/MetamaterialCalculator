@@ -86,6 +86,8 @@ class LayersStructureGUI(QWidget):
         self.scroll_widget = QWidget()
         self.layers_layout = QHBoxLayout(self.scroll_widget)
         self.layers_layout.setSpacing(0)
+        # self.scroll_widget.setMinimumHeight(130)
+        self.scroll_area.setMinimumHeight(130)
         # self.layers_layout.setContentsMargins(0, 0, 0, 0)
         # self.layers_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.scroll_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -147,26 +149,22 @@ class LayersStructureGUI(QWidget):
             # layer_container_width = new_layer_btn.button.sizeHint().width()
 
             thickness_input = QLineEdit(str(thickness_val))
-            # textChanged
             thickness_input.editingFinished.connect(self.create_thickness_update_callback(layer_key, thickness_input))
-            # thickness_unit_label = QLabel("mm")
-            # thickness_unit_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-            # label_width = thickness_unit_label.sizeHint().width()
 
-            thickness_input.setFixedWidth(layer_container_width) # - label_width)
+            thickness_input.setFixedWidth(layer_container_width)
             thickness_input.setAlignment(Qt.AlignmentFlag.AlignLeft)
             thickness_input.setStyleSheet("padding: 0px; border: 1px solid gray;")
-
-            # thickness_layout = QHBoxLayout()
-            # thickness_layout.setSpacing(0)
-            # thickness_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-            # thickness_layout.addWidget(thickness_input)
-            # thickness_layout.addWidget(thickness_unit_label)
-            # layer_container.addLayout(thickness_layout)
             layer_container.addWidget(thickness_input)
-
             layer_container.addWidget(new_layer_btn.button, alignment=Qt.AlignmentFlag.AlignLeft)
 
+            dot_label = QLabel("●")  # dot
+            dot_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            dot_label.setStyleSheet("font-size: 10px; color: black;")
+
+            if layer_key == selected_layer:
+                dot_label.setStyleSheet("font-size: 10px; color: lightgreen;")  # Light green if selected
+
+            layer_container.addWidget(dot_label, alignment=Qt.AlignmentFlag.AlignCenter)
             self.layers_layout.addLayout(layer_container)
             self.layers_buttons.append(new_layer_btn)
 
@@ -223,6 +221,21 @@ class LayersStructureGUI(QWidget):
         layer_index = str(dynamic_layer.index)
         selected_layer = f'{layer_index}'
         self.main_window.update_material_panel(layers[selected_layer]["material_params"])
+        self.update_dot_colors()
+
+    def update_dot_colors(self):
+        """Updates dot colors to reflect the currently selected layer."""
+        for i in range(self.layers_layout.count()):
+            item = self.layers_layout.itemAt(i)
+            if isinstance(item, QVBoxLayout):
+                dot_label = item.itemAt(2).widget()  # Third widget in the container (dot label)
+                layer_index = str(i)  # Assuming layers are stored in order
+
+                if dot_label and isinstance(dot_label, QLabel):
+                    if layer_index == selected_layer:
+                        dot_label.setStyleSheet("font-size: 10px; color: lightgreen;")
+                    else:
+                        dot_label.setStyleSheet("font-size: 10px; color: black;")
 
     def load_layers_structure(self, layers_structure_DB):
         # TODO: here will code implementation to read the structure as dict
