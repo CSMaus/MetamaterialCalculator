@@ -2,10 +2,11 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QScrollArea, QLineEdit, \
     QComboBox
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QGridLayout
+from PyQt6.QtCore import Qt
 from torch.utils.data.datapipes.gen_pyi import materialize_lines
 
-from GUI_elements import CustomButton
+from GUI_elements import CustomButton, CustomButton2
 from structures.MaterialType import PorousMaterial, SolidMaterial
 
 # later need to implement read from database
@@ -13,7 +14,7 @@ from structures.MaterialType import PorousMaterial, SolidMaterial
 # later to replace it to dictionary with calculation results
 # layers would be dictionary to interactive any position change of layer
 layers = {}
-selected_layer = ""
+selected_layer = "0"
 
 
 class MainWindow(QWidget):
@@ -21,16 +22,20 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.porous_material = PorousMaterial()
-        self.solid_material = SolidMaterial()
-        self.material_gui = MaterialPropertiesGUI(self.porous_material)
+        # self.porous_material = PorousMaterial()
+        # self.solid_material = SolidMaterial()
+        # self.material_gui = MaterialPropertiesGUI(self.porous_material)
         # self.material_gui.set_material(self.solid_material)
+        self.material_gui = MaterialPropertiesGUI(layers[selected_layer]["material_params"])
+
+        self.layers_gui = LayersStructureGUI(self)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.material_gui)
 
         layout = QVBoxLayout()
+        layout.addWidget(self.layers_gui)
         layout.addWidget(self.scroll_area)
         self.setLayout(layout)
 
@@ -50,12 +55,14 @@ class MainWindow(QWidget):
     def update_material_panel(self, material):
         self.material_gui.set_material(material)
 
-
+# TODO: todo: fix the layers to be aligned to each other wihtout spacing
 class LayersStructureGUI(QWidget):
     global layers
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
+        self.main_window = main_window
         main_layout = QVBoxLayout(self)
+
         self.control_panel = QWidget(self)
         control_layout = QHBoxLayout(self.control_panel)
 
@@ -75,48 +82,125 @@ class LayersStructureGUI(QWidget):
         control_layout.addWidget(self.add_layer)
 
         main_layout.addWidget(self.control_panel)
-        main_layout.setAlignment(control_layout)  # add here right alignment
-
-        self.solid_image = "solid.png"
-        self.porous_image = "porous.png"
 
         self.scroll_area = QScrollArea(self)
         self.scroll_widget = QWidget()
         self.layers_layout = QHBoxLayout(self.scroll_widget)
+        self.layers_layout.setSpacing(0)
+        self.layers_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        # self.layers_layout = QGridLayout(self.scroll_widget) #  QHBoxLayout QGridLayout
+
         self.scroll_widget.setLayout(self.layers_layout)
         self.scroll_area.setWidget(self.scroll_widget)
         self.scroll_area.setWidgetResizable(True)
+        main_layout.addWidget(self.scroll_area)
 
-        self.layers_buttons = []  # this is Buttons looks like images
-        # self.update_layers_gui()
+        self.solid_image = "solid.png"
+        self.porous_image = "porous.png"
+        self.layers_buttons = []  # this is Buttons that looks like images
+
+        self.update_layers_gui()
 
     def add_dynamic_layer(self):
+        global selected_layer
+
         index = len(layers.keys())
-        layer_key = f'{index}'
+        layer_key = str(index)
         material_type = self.material_types.currentText()
 
         if material_type == "Porous":
             layer_material = PorousMaterial()
-            layers[layer_key] = {"material_type": material_type,
-                                 "thickness": self.thickness,
-                                 "material_params": layer_material}
+            # image_path = self.porous_image
         else:
-            layer_material = SolidMaterial
-            layers[layer_key] = {"material_type": material_type,
-                                 "thickness": self.thickness,
-                                 "material_params": layer_material}
+            layer_material = SolidMaterial()
+            # image_path = self.solid_image
 
+        layers[layer_key] = {"material_type": material_type,
+                             "thickness": self.thickness.text(),
+                             "material_params": layer_material}
+        selected_layer = layer_key
         self.update_layers_gui()
+        self.main_window.update_material_panel(layers[selected_layer]["material_params"])
+
 
     def update_layers_gui(self):
         # TODO: sort keys by increasing index number
-        for layer_key in layers.keys():
+
+        # for ease remake all gui for layers
+        # remove existing buttons before updating
+        '''for i in reversed(range(self.layers_layout.count())):
+            self.layers_layout.itemAt(i).widget().deleteLater()
+        self.layers_buttons.clear()'''
+
+        while self.layers_layout.count():
+            item = self.layers_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self.clear_layout(item.layout())
+
+        sorted_keys = sorted(layers.keys(), key=lambda x: int(x))
+        for col_index, layer_key in enumerate(sorted_keys):
+            thickness_val = layers[layer_key]["thickness"]
+
             material_type = layers[layer_key]["material_type"]
-            index = int(float(layer_key))
             image_path = self.porous_image if material_type == "Porous" else self.solid_image
-            new_layer_btn = CustomButton(index, image_path, self.layers_layout, None)
-            self.layers_layout.addWidget(new_layer_btn.button if isinstance(new_layer_btn, CustomButton) else new_layer_btn)
+            new_layer_btn = CustomButton2(int(layer_key), image_path, self.layers_layout, self.change_selected_layer)
+
+            layer_container = QVBoxLayout()
+            layer_container_width = new_layer_btn.button.sizeHint().width()
+
+            thickness_input = QLineEdit(str(thickness_val))
+            thickness_input.textChanged.connect(self.create_thickness_update_callback(layer_key, thickness_input))
+            thickness_unit_label = QLabel("mm")
+            thickness_unit_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+            label_width = thickness_unit_label.sizeHint().width()
+
+            thickness_input.setFixedWidth(layer_container_width - label_width)
+            thickness_input.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            thickness_input.setStyleSheet("padding: 0px; border: 1px solid gray;")
+
+            thickness_layout = QHBoxLayout()
+            thickness_layout.setSpacing(0)
+            thickness_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            thickness_layout.addWidget(thickness_input)
+            thickness_layout.addWidget(thickness_unit_label)
+            layer_container.addLayout(thickness_layout)
+
+            layer_container.addWidget(new_layer_btn.button, alignment=Qt.AlignmentFlag.AlignLeft)
+
+            self.layers_layout.addLayout(layer_container)
             self.layers_buttons.append(new_layer_btn)
+
+    def clear_layout(self, layout):
+        """Recursively removes all widgets and layouts inside a layout."""
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self.clear_layout(item.layout())
+
+    def create_thickness_update_callback(self, layer_key, thickness_input):
+        """Fixes lambda scope issue and properly updates thickness."""
+        def callback():
+            self.update_thickness(layer_key, thickness_input.text())
+        return callback
+
+    def update_thickness(self, layer_key, value):
+        try:
+            layers[layer_key]["thickness"] = float(value)
+        except ValueError:
+            pass  # Ignore invalid inputs (e.g., empty field)
+
+    def change_selected_layer(self, dynamic_layer):
+        global selected_layer
+
+        # if isinstance(dynamic_layer, CustomButton):
+        layer_index = str(dynamic_layer.index)
+        selected_layer = f'{layer_index}'
+        self.main_window.update_material_panel(layers[selected_layer]["material_params"])
 
     def load_layers_structure(self, layers_structure_DB):
         # TODO: here will code implementation to read the structure as dict
@@ -124,10 +208,8 @@ class LayersStructureGUI(QWidget):
         layers.clear()
         for layer_key in layers_structure_DB.keys():
             # load layers structure from DataBase and fill this variable
-            layers[layer_key] = layers_structure_DB[layer_key]
             # layers.append(layer_item)
-
-
+            layers[layer_key] = layers_structure_DB[layer_key]
 
 class MaterialPropertiesGUI(QWidget):
     def __init__(self, material_instance):
@@ -180,6 +262,9 @@ class MaterialPropertiesGUI(QWidget):
 
 
 if __name__ == "__main__":
+    layers["0"] = {"material_type": "Porous",
+                         "thickness": "10",
+                         "material_params": PorousMaterial()}
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()

@@ -30,7 +30,7 @@ class DynamicButtonsApp(QWidget):
         # this will be material layers in future
         self.dynamic_buttons = []
 
-        self.image_paths = ["steel.jpg", "porous.jpeg"]
+        self.image_paths = ["solid.png", "porous.png"]
 
     def add_dynamic_button(self):
         index = len(self.dynamic_buttons) + 1
