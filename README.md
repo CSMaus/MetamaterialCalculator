@@ -11,5 +11,7 @@ Send, Modify, Request, etc. using PostdegreeSQL
 Link to original paper: https://www.sciencedirect.com/science/article/pii/S0022460X23003474
 There is also original matlab code.
 
-GUI prototype:![GUI_prototype.png](GUI_prototype0.png)
+GUI prototype:
+https://www.figma.com/board/ibGfVYix1fpX04vusc8i4W/Composite-material-acoustic-properties?node-id=0-1&t=kQGkkdy0S3L06Vtc-1
 
+![GUI_prototype.png](GUI_prototype.png)
