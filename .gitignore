@@ -4,3 +4,5 @@
 *.pyc
 *.env
 kseni/backend/config.json
+kseni/tutorial_docs/Docker.pages
+kseni/tutorial_docs/Docker_cmds.pages
