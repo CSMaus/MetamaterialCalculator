@@ -8,6 +8,7 @@ from torch.utils.data.datapipes.gen_pyi import materialize_lines
 from GUI_elements import CustomButton, CustomButton2
 from structures.MaterialType import PorousMaterial, SolidMaterial
 from kseni.backend.crud import insert_material, get_materials, user_name
+from kseni.backend.database import initialize_database
 
 layers = {}
 selected_layer = "0"
@@ -82,7 +83,7 @@ class MainWindow(QWidget):
                 print(ex)
                 material_dict[mkey] = 0
 
-        material_name = f"{self.material_name}"
+        material_name = self.material_name.text()
         material_type = "Porous" if "viscous_cl" in material_dict else "Solid"
         user_added = user_name # "admin"  # Later, replace with actual logged-in user
         producer = "Unknown Producer"  # Later, replace with user input
@@ -342,10 +343,15 @@ class MaterialPropertiesGUI(QWidget):
                 self.textboxes[prop].setText(str(value) if value is not None else "")
 
 
+
+
 if __name__ == "__main__":
     layers["0"] = {"material_type": "Porous",
                          "thickness": "10",
                          "material_params": PorousMaterial()}
+
+    initialize_database()
+
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()

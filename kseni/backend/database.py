@@ -6,22 +6,20 @@ config_path = os.path.join(os.path.dirname(__file__), "config.json")
 with open(config_path) as config_file:
     config = json.load(config_file)
 
-DB_NAME = config["DB_NAME"]
+DB_NAME = config["DB_NAME"] # materials_db
 DB_USER = config["DB_USER"]
 DB_PASS = config["DB_PASS"]
-DB_HOST = config["DB_HOST"] # recheck all for deployment
-DB_PORT = config["DB_PORT"]
+DB_HOST = config["DB_HOST"] # now localhost, bcs with local docker container
+DB_PORT = config["DB_PORT"] # 5432
+
+# to connect to DB in docker container
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DEFAULT_DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/postgres"
 
 
 def create_database_if_not_exists():
-    conn = psycopg2.connect(
-        dbname="postgres",  # Connect to the default 'postgres' database first
-        user=DB_USER,
-        password=DB_PASS,
-        host=DB_HOST,
-        port=DB_PORT
-    )
-    conn.autocommit = True
+    conn = psycopg2.connect(DEFAULT_DB_URL)
+    conn.autocommit = True  # to not call commit after each sql command
     cursor = conn.cursor()
 
     cursor.execute(f"SELECT 1 FROM pg_database WHERE datname = '{DB_NAME}';")
@@ -29,6 +27,8 @@ def create_database_if_not_exists():
     if not exists:
         cursor.execute(f"CREATE DATABASE {DB_NAME};")
         print(f"Database '{DB_NAME}' created successfully.")
+    else:
+        print(f"Database '{DB_NAME}' already exists.")
     cursor.close()
     conn.close()
 
@@ -52,14 +52,12 @@ def create_materials_table():
     print("Materials table is ready.")
 
 def get_connection():
+    return psycopg2.connect(DATABASE_URL)
+
+def initialize_database():
     create_database_if_not_exists()
-    return psycopg2.connect(
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
-        host=DB_HOST,
-        port=DB_PORT
-    )
+    create_materials_table()
+
 
 # Database Schema for materials Table
 # 	•	id → Unique identifier (Primary Key)
